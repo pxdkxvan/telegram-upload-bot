@@ -1,0 +1,15 @@
+[submodule "config"]
+	path = config
+	url = https://github.com/pxdkxvan/telegram-upload-bot-config
+[submodule "dispatcher"]
+	path = dispatcher
+	url = https://github.com/pxdkxvan/telegram-upload-bot-dispatcher
+[submodule "migration"]
+	path = migration
+	url = https://github.com/pxdkxvan/telegram-upload-bot-migration
+[submodule "node"]
+	path = node
+	url = https://github.com/pxdkxvan/telegram-upload-bot-node
+[submodule "rest"]
+	path = rest
+	url = https://github.com/pxdkxvan/telegram-upload-bot-rest
