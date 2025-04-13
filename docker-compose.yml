@@ -1,0 +1,99 @@
+version: '2.35.0'
+
+services:
+
+  postgres:
+    image: postgres:17
+    hostname: ${POSTGRES_HOST}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: telegram
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: on-failure
+
+  rabbitmq:
+    image: rabbitmq:4.0.7-management
+    hostname: ${RABBITMQ_HOST}
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - ${RABBITMQ_PORT}:5672
+      - 1${RABBITMQ_PORT}:15672
+    restart: on-failure
+
+  config:
+    build:
+      context: config
+      dockerfile: Dockerfile
+    image: telegram-upload-bot-config
+    hostname: ${CONFIG_HOST}
+    env_file:
+      - .env
+    ports:
+      - ${CONFIG_PORT}:${CONFIG_PORT}
+    restart: on-failure
+
+  migration:
+    build:
+      context: migration
+      dockerfile: Dockerfile
+    image: telegram-upload-bot-migration
+    env_file:
+      - .env
+    ports:
+      - ${MIGRATION_PORT}:${MIGRATION_PORT}
+    depends_on:
+      - postgres
+      - config
+    restart: on-failure
+
+  dispatcher:
+    build:
+      context: dispatcher
+      dockerfile: Dockerfile
+    image: telegram-upload-bot-dispatcher
+    env_file:
+      - .env
+    ports:
+      - ${DISPATCHER_PORT}:${DISPATCHER_PORT}
+    depends_on:
+      - rabbitmq
+      - migration
+    restart: on-failure
+
+  node:
+    build:
+      context: node
+      dockerfile: Dockerfile
+    image: telegram-update-bot-node
+    env_file:
+      - .env
+    ports:
+      - ${NODE_PORT}:${NODE_PORT}
+    depends_on:
+      - rabbitmq
+      - migration
+    restart: on-failure
+
+  rest:
+    build:
+      context: rest
+      dockerfile: Dockerfile
+    image: telegram-update-bot-rest
+    hostname: ${REST_HOST}
+    env_file:
+      - .env
+    ports:
+      - ${REST_PORT}:${REST_PORT}
+    depends_on:
+      - migration
+    restart: on-failure
+
+volumes:
+  postgres-data:
+    name: telegram-upload-bot-postgres-data
